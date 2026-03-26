@@ -1,0 +1,82 @@
+@startuml
+
+abstract class Persona {
+  - dni: String
+  - nombre: String
+  - telefono: String
+}
+
+class Paciente {
+  - sintomas: String
+  - prioridad: ColorPrioridad
+  - estadoActual: String
+  - historialCerrado: boolean
+}
+
+abstract class PersonalSalud {
+  - numColegiado: String
+  - especialidad: String
+}
+
+class Enfermero {
+  + realizarTriaje(p: Paciente): Triaje
+}
+
+class Medico {
+  + atenderPaciente(p: Paciente)
+  + actualizarEstado(p: Paciente, nuevoEstado: String)
+  + generarInforme(p: Paciente): InformeMedico
+}
+
+class Triaje {
+  - codigoColor: ColorPrioridad
+  - constantesVitales: String
+  - fecha: Date
+  + asignarPrioridad(): ColorPrioridad
+}
+
+interface Recurso {
+  + verificarDisponibilidad(): boolean
+}
+
+class Cama {
+  - idCama: int
+  - ubicacion: String
+  - disponible: boolean
+}
+
+class InformeMedico {
+  - diagnostico: String
+  - tratamiento: String
+  + integrarEnHistorial()
+}
+
+enum ColorPrioridad {
+  ROJO
+  AMARILLO
+  VERDE
+  BLANCO
+}
+
+
+Persona <|-- Paciente
+Persona <|-- PersonalSalud
+PersonalSalud <|-- Enfermero
+PersonalSalud <|-- Medico
+
+
+Paciente "1" o-- "0..1" Triaje : recibe
+Enfermero "1" -- "0..*" Triaje : registra
+Medico "1" -- "0..*" Paciente : atiende
+Medico "1" -- "0..*" InformeMedico : genera
+Paciente "1" -- "1" InformeMedico : posee
+
+
+Recurso <|.. Cama
+Cama "0..1" -- "1" Paciente : asignada a
+
+
+Paciente ..> ColorPrioridad : usa
+Triaje ..> ColorPrioridad : clasifica por
+
+@enduml
