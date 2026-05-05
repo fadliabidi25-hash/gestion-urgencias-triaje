@@ -45,14 +45,38 @@ public class Enfermero extends Persona {
     }
 
     private int obtenerFrecuenciaCardiaca(Scanner sc) {
-        System.out.print("Introduce frecuencia cardíaca (ppm): ");
-        int valor = Integer.parseInt(sc.nextLine());
+        int valor = -1;
+        while (valor < 0) {
+            try {
+                System.out.print("Introduce frecuencia cardíaca (ppm): ");
+                valor = Integer.parseInt(sc.nextLine());
+                if (!Validador.validarFrecuenciaCardiaca(valor)) {
+                    System.out.println("Error: La frecuencia cardíaca debe estar entre 1 y 299 ppm.");
+                    valor = -1;
+                }
+            } catch (NumberFormatException e) {
+                System.out.println("Error: Debe ser un número entero.");
+                valor = -1;
+            }
+        }
         return valor;
     }
 
     private float obtenerTemperatura(Scanner sc) {
-        System.out.print("Introduce temperatura corporal (ej. 36.5): ");
-        float valor = Float.parseFloat(sc.nextLine());
+        float valor = -1;
+        while (valor < 0) {
+            try {
+                System.out.print("Introduce temperatura corporal (ej. 36.5): ");
+                valor = Float.parseFloat(sc.nextLine());
+                if (!Validador.validarTemperatura(valor)) {
+                    System.out.println("Error: La temperatura debe estar entre 35°C y 42°C.");
+                    valor = -1;
+                }
+            } catch (NumberFormatException e) {
+                System.out.println("Error: Debe ser un número decimal.");
+                valor = -1;
+            }
+        }
         return valor;
     }
 

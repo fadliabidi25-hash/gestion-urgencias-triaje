@@ -1,8 +1,8 @@
 package clases;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.ArrayList;
 
 public class Triaje {
     
@@ -114,6 +114,13 @@ public void agregarSintoma(String sintoma) {
     
     public void setEspecialidadRequerida(String especialidadRequerida) {
         this.especialidadRequerida = especialidadRequerida;
+    }
+    
+    // método para resumen legible
+    public String obtenerResumen() {
+        String sintList = sintomas.isEmpty() ? "Sin síntomas" : sintomas.toString();
+        return "Código: " + codigo + " | FC: " + frecuenciaCardiaca + 
+               " | Temp: " + temperatura + "°C | Síntomas: " + sintList;
     }
     
     // metosdo toString

@@ -96,6 +96,13 @@ public class SistemaUrgencias {
             System.out.println("==========================================\n");
 
             asignarBoxReanimacion(p);
+            
+            // Notificar a familia
+            NotificadorFamilia.notificarEmergencia(p);
+        } else if (p.getTriaje().getCodigo() == CodigoColor.AMARILLO) {
+            int espera = calcularTiempoEspera(p);
+            PantallaTurnos.mostrarPantallaTurnos(p, espera);
+            PantallaTurnos.mostrarTurnosDisponibles();
         }
     }
 
@@ -129,5 +136,64 @@ public class SistemaUrgencias {
             }
         }
         System.out.println("¡ATENCIÓN! No hay boxes de reanimación libres.");
+    }
+
+    // Buscar paciente por nombre
+    public Paciente buscarPacienteNombre(String nombre) {
+        for (Paciente p : colaPacientes) {
+            if (p.getNombre().equalsIgnoreCase(nombre)) {
+                return p;
+            }
+        }
+        return null;
+    }
+
+    // Buscar por número de historia
+    public Paciente buscarPacienteHistoria(String numeroHistoria) {
+        for (Paciente p : colaPacientes) {
+            if (p.getNumeroHistoria().equals(numeroHistoria)) {
+                return p;
+            }
+        }
+        return null;
+    }
+
+    // Listar pacientes en cola
+    public void listarPacientesEnCola() {
+        if (colaPacientes.isEmpty()) {
+            System.out.println("No hay pacientes en la cola.");
+            return;
+        }
+        System.out.println("\n--- PACIENTES EN COLA DE URGENCIAS ---");
+        for (int i = 0; i < colaPacientes.size(); i++) {
+            Paciente p = colaPacientes.get(i);
+            String codigo = (p.getTriaje() != null) ? p.getTriaje().getCodigo().toString() : "Sin triaje";
+            System.out.println((i + 1) + ". " + p.getNombre() + " | Historia: " + p.getNumeroHistoria() + " | Código: " + codigo + " | Estado: " + p.getEstado());
+        }
+    }
+
+    // Mostrar estado de camas
+    public void mostrarEstadoCamas() {
+        System.out.println("\n--- ESTADO DE CAMAS Y BOXES ---");
+        int libres = 0, ocupadas = 0;
+        for (Cama c : camasDisponibles) {
+            if (c.estaDisponible()) {
+                System.out.println("  " + c.getId() + " (" + c.getTipo() + " - " + c.getEspecialidad() + ") -> LIBRE");
+                libres++;
+            } else {
+                String paciente = c.getPacienteActual() != null ? c.getPacienteActual().getNombre() : "?";
+                System.out.println("  " + c.getId() + " (" + c.getTipo() + " - " + c.getEspecialidad() + ") -> OCUPADA por " + paciente);
+                ocupadas++;
+            }
+        }
+        System.out.println("Total: " + libres + " libres | " + ocupadas + " ocupadas");
+    }
+
+    // Actualizar estado de paciente
+    public void actualizarEstadoPaciente(Paciente p, EstadoPaciente nuevoEstado) {
+        if (p != null) {
+            p.actualizarEstado(nuevoEstado);
+            System.out.println("Estado del paciente " + p.getNombre() + " actualizado a: " + nuevoEstado);
+        }
     }
 }
