@@ -1,0 +1,40 @@
+@startuml
+' ============================================================
+' DIAGRAMA DE ACTIVIDADES - PACIENTE EN URGENCIAS
+' ============================================================
+
+start
+
+:Paciente llega a Urgencias;
+:Administrativo resgistra datos y DNI;
+:Sistema genera Numero de Historia;
+
+:Enfermero hace el Triaje;
+
+if (¿Es urgencia critica?) then (Sí, ROJO)
+  :Activar Alerta Sonora y Visual;
+  :Asinar Box de reanimación;
+else (No, otro color)
+  :Añadir a cola de espera;
+  :Asignar cama segun especialidad;
+endif
+
+:Medico atiende al pacinte;
+:Generar Informe;
+
+if (¿Necesita UCI?) then (Sí)
+  :Poner estado PENDIENTE_TRASLADO;
+  :Cordinar traslado;
+else (No)
+  if (¿Recuperado?) then (Sí)
+    :Poner estado ALTA;
+  else (No)
+    :Poner estado GRAVE o ESTABLE;
+  endif
+endif
+
+:Liberar la cama;
+:Actualizar el tablero;
+
+stop
+@enduml

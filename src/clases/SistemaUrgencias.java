@@ -1,5 +1,11 @@
 package clases;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -8,11 +14,13 @@ public class SistemaUrgencias {
     private List<Paciente> colaPacientes;
     private List<Cama> camasDisponibles;
     private List<Turno> turnosActivos;
+    private List<EquipoMedico> recursosDisponibles;
 
     public SistemaUrgencias() {
         this.colaPacientes = new ArrayList<>();
         this.camasDisponibles = new ArrayList<>();
         this.turnosActivos = new ArrayList<>();
+        this.recursosDisponibles = new ArrayList<>();
     }
 
     public void registrarPaciente(Paciente p) {
@@ -20,6 +28,33 @@ public class SistemaUrgencias {
             colaPacientes.add(p);
             System.out.println("Paciente " + p.getNombre() + " registrado en la cola.");
         }
+    }
+
+    public boolean existePacienteConDNI(String dni) {
+        for (Paciente p : colaPacientes) {
+            if (p.getDni().equalsIgnoreCase(dni)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public String generarSiguienteNumeroHistoria() {
+        int max = 0;
+        for (Paciente p : colaPacientes) {
+            String num = p.getNumeroHistoria();
+            if (num != null && num.startsWith("H-")) {
+                try {
+                    int valor = Integer.parseInt(num.substring(2));
+                    if (valor > max) {
+                        max = valor;
+                    }
+                } catch (NumberFormatException e) {
+                    // Ignorar si no se puede convertir a número
+                }
+            }
+        }
+        return String.format("H-%03d", max + 1);
     }
 
     public void realizarTriaje(Paciente p, Enfermero e) {
@@ -42,10 +77,7 @@ public class SistemaUrgencias {
             return false;
         }
 
-        String especialidad = p.getTriaje().getEspecialidadRequerida();
-        if (especialidad == null || especialidad.isEmpty()) {
-            especialidad = "GENERAL";
-        }
+        final String especialidad = (p.getTriaje().getEspecialidadRequerida() == null || p.getTriaje().getEspecialidadRequerida().isEmpty()) ? "GENERAL" : p.getTriaje().getEspecialidadRequerida();
 
         // 1. Buscar cama de especialidad exacta
         for (Cama c : camasDisponibles) {
@@ -61,14 +93,13 @@ public class SistemaUrgencias {
             for (Cama c : camasDisponibles) {
                 if (c.estaDisponible() && c.getEspecialidad().equalsIgnoreCase("GENERAL")) {
                     c.asignarPaciente(p);
-                    System.out.println("Cama " + c.getId() + " (GENERAL) asignada a " + p.getNombre() +
-                                       " (especialidad requerida: " + especialidad + ")");
+                    System.out.println("Cama " + c.getId() + " (GENERAL) asignada a " + p.getNombre());
                     return true;
                 }
             }
         }
 
-        System.out.println("No hay camas disponibles para " + especialidad);
+        System.out.println("No hay camas disponibles para " + especialidad + " ni GENERAL.");
         return false;
     }
 
@@ -90,7 +121,7 @@ public class SistemaUrgencias {
             System.out.println("\n==========================================");
             System.out.println("  ¡¡ALERTA ROJA - PACIENTE CRÍTICO!!");
             System.out.println("==========================================");
-            System.out.println("Paciente: " + p.getNombre() + " " + p.getApellidos());
+            System.out.println("Paciente: " + p.getNombre());
             System.out.println("Nº Historia: " + p.getNumeroHistoria());
             System.out.println("Síntomas: " + p.getTriaje().getSintomas());
             System.out.println("==========================================\n");
@@ -98,21 +129,24 @@ public class SistemaUrgencias {
             asignarBoxReanimacion(p);
             
             // Notificar a familia
-            NotificadorFamilia.notificarEmergencia(p);
+            enviarNotificacion("Alerta: Paciente crítico " + p.getNombre() + " en URGENCIAS.");
         } else if (p.getTriaje().getCodigo() == CodigoColor.AMARILLO) {
             int espera = calcularTiempoEspera(p);
-            PantallaTurnos.mostrarPantallaTurnos(p, espera);
-            PantallaTurnos.mostrarTurnosDisponibles();
+            enviarNotificacion("Paciente " + p.getNombre() + " asignado a turno amarillo. Espera estimada: " + espera + " minutos.");
         }
     }
 
-    public void enviarNotification(String mensaje) {
+    public void enviarNotificacion(String mensaje) {
         System.out.println("[Notificación] " + mensaje);
     }
 
     // Métodos auxiliares
     public void agregarCama(Cama c) {
         if (c != null) camasDisponibles.add(c);
+    }
+    
+    public void agregarEquipo(EquipoMedico e) {
+        if (e != null) recursosDisponibles.add(e);
     }
 
     public boolean estaPacienteEnCama(Paciente p) {
@@ -186,7 +220,12 @@ public class SistemaUrgencias {
                 ocupadas++;
             }
         }
-        System.out.println("Total: " + libres + " libres | " + ocupadas + " ocupadas");
+        System.out.println("Total camas: " + libres + " libres | " + ocupadas + " ocupadas");
+        
+        System.out.println("\n--- EQUIPOS MÉDICOS ---");
+        for (EquipoMedico eq : recursosDisponibles) {
+            System.out.println("  " + eq.getId() + " - " + eq.getNombre() + " (" + eq.getUbicacion() + ") -> " + (eq.estaDisponible() ? "DISPONIBLE" : "EN USO"));
+        }
     }
 
     // Actualizar estado de paciente
@@ -194,6 +233,40 @@ public class SistemaUrgencias {
         if (p != null) {
             p.actualizarEstado(nuevoEstado);
             System.out.println("Estado del paciente " + p.getNombre() + " actualizado a: " + nuevoEstado);
+        }
+    }
+
+    // ----- PERSISTENCIA DE DATOS -----
+    public void guardarPacientes() {
+        try {
+            BufferedWriter bw = new BufferedWriter(new FileWriter("pacientes.txt"));
+            for (Paciente p : colaPacientes) {
+                bw.write(p.getDni() + ";" + p.getNombre() + ";" + p.getApellidos() + ";" + p.getNumeroHistoria());
+                bw.newLine();
+            }
+            bw.close();
+            System.out.println("Datos guardados en pacientes.txt");
+        } catch (IOException e) {
+            System.out.println("Error guardando: " + e.getMessage());
+        }
+    }
+
+    public void cargarPacientes() {
+        File f = new File("pacientes.txt");
+        if (!f.exists()) return;
+        try {
+            BufferedReader br = new BufferedReader(new FileReader(f));
+            String linea;
+            while ((linea = br.readLine()) != null) {
+                String[] d = linea.split(";");
+                if (d.length == 4) {
+                    Paciente p = new Paciente(d[0], d[1], d[2], d[3]);
+                    registrarPaciente(p);
+                }
+            }
+            br.close();
+        } catch (IOException e) {
+            System.out.println("Error leyendo: " + e.getMessage());
         }
     }
 }

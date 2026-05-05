@@ -1,0 +1,61 @@
+@startuml
+' ============================================================
+' DIAGRAMA DE CASOS DE USO - GESTIÓN DE URGENCIAS Y TRIAJE
+' ============================================================
+
+left to right direction
+skinparam packageStyle rectangle
+
+actor "Administrativo" as admin
+actor "Enfermero" as enfermero
+actor "Médico" as medico
+actor "Sistema Urgencias" as sistema
+
+rectangle "Urgencias del Hospital" {
+    
+    ' Casos de uso de Administración
+    usecase "Registrar Paciente" as UC_Registrar
+    usecase "Asignar Cama" as UC_AsignarCama
+    usecase "Guardar/Cargar Datos (Ficheros)" as UC_Persistencia
+    usecase "Verificar Recursos/Camas" as UC_Tablero
+    
+    ' Casos de uso de Enfermería
+    usecase "Realizar Triaje" as UC_Triaje
+    
+    ' Casos de uso Médicos
+    usecase "Atender Paciente" as UC_Atender
+    usecase "Generar Informe" as UC_Informe
+    usecase "Actualizar Estado" as UC_Estado
+    usecase "Coordinar Traslado" as UC_Traslado
+    
+    ' Casos de uso automáticos del Sistema
+    usecase "Calcular Código Color" as UC_Calcular
+    usecase "Activar Alerta Roja" as UC_Alerta
+    usecase "Asignar Box Reanimación" as UC_Box
+}
+
+' Relaciones Administrativo
+admin --> UC_Registrar
+admin --> UC_AsignarCama
+admin --> UC_Persistencia
+admin --> UC_Tablero
+
+' Relaciones Enfermero
+enfermero --> UC_Triaje
+enfermero --> UC_Tablero
+
+' Relaciones Médico
+medico --> UC_Atender
+medico --> UC_Informe
+medico --> UC_Estado
+medico --> UC_Traslado
+medico --> UC_Tablero
+
+' Relaciones Sistema Automático
+UC_Triaje ..> UC_Calcular : <<include>>
+UC_Calcular ..> UC_Alerta : <<extends>> (Si Código = ROJO)
+UC_Alerta ..> UC_Box : <<include>>
+
+sistema --> UC_Persistencia : Ejecuta al inicio/cierre
+
+@enduml

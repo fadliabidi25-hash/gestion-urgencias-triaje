@@ -8,26 +8,26 @@ public class Triaje {
     
     // ATRIBUTOS
     private Date fechaHora;
-    private CodigoColor codigo;
+    private CodigoColor codigoColor;
     private String presionArterial;
     private int frecuenciaCardiaca;
     private float temperatura;
-    private List<String> sintomas;
+    private String sintomas;
     private String especialidadRequerida;
     
     // CONSTRUCTOR
     public Triaje() {
         this.fechaHora = new Date();  // Fecha y hora actual
-        this.sintomas = new ArrayList<>();
+        this.sintomas = "";
     }
     
 /**ESTE CONSTRUCTOR VACÍO LO Q HACE ES GARANTIZAR LA CREACIÓN DEL TRIAJE INCLUSO SIN ASIGNARLE DATOS. pONE LA HORA EXACTA EN EL MOMENTO DE CREACIÓN Y LLAMA AL MÉTODO AGREGAR SÍNTOMA PARA Q NO QUEDE NULL EL ATRIBUTO SINTOMAS Y EVITAR LA EXCEPCIÓN NULLPOINTEREXCEPTION
 */
     // CONSTRUCTOR CON PARÁMETROS
-    public Triaje(CodigoColor codigo, String presionArterial, 
+    public Triaje(CodigoColor codigoColor, String presionArterial, 
                   int frecuenciaCardiaca, float temperatura) {
         this();  //invoca al constructor vacio para q asigne fecha y sintomas directamente(asi nos ahorramos codigo)
-        this.codigo = codigo;
+        this.codigoColor = codigoColor;
         this.presionArterial = presionArterial;
         this.frecuenciaCardiaca = frecuenciaCardiaca;
         this.temperatura = temperatura;
@@ -37,7 +37,7 @@ public class Triaje {
     
     // MÉTODOS PRINCIPALES
     public boolean esCritico() {
-        return codigo == CodigoColor.ROJO;
+        return codigoColor == CodigoColor.ROJO;
     }
     
 
@@ -55,7 +55,11 @@ public class Triaje {
         }
     }
 public void agregarSintoma(String sintoma) {
-        this.sintomas.add(sintoma);
+        if (this.sintomas.isEmpty()) {
+            this.sintomas = sintoma;
+        } else {
+            this.sintomas += ", " + sintoma;
+        }
     }
     
     // GETTERS Y SETTERS
@@ -68,11 +72,11 @@ public void agregarSintoma(String sintoma) {
     }
     
     public CodigoColor getCodigo() {
-        return codigo;
+        return codigoColor;
     }
     
-    public void setCodigo(CodigoColor codigo) {
-        this.codigo = codigo;
+    public void setCodigo(CodigoColor codigoColor) {
+        this.codigoColor = codigoColor;
     }
     
     public String getPresionArterial() {
@@ -99,11 +103,11 @@ public void agregarSintoma(String sintoma) {
         this.temperatura = temperatura;
     }
     
-    public List<String> getSintomas() {
+    public String getSintomas() {
         return sintomas;
     }
     
-    public void setSintomas(List<String> sintomas) {
+    public void setSintomas(String sintomas) {
         this.sintomas = sintomas;
     }
    
@@ -118,8 +122,8 @@ public void agregarSintoma(String sintoma) {
     
     // método para resumen legible
     public String obtenerResumen() {
-        String sintList = sintomas.isEmpty() ? "Sin síntomas" : sintomas.toString();
-        return "Código: " + codigo + " | FC: " + frecuenciaCardiaca + 
+        String sintList = sintomas.isEmpty() ? "Sin síntomas" : sintomas;
+        return "Código: " + codigoColor + " | FC: " + frecuenciaCardiaca + 
                " | Temp: " + temperatura + "°C | Síntomas: " + sintList;
     }
     
@@ -128,7 +132,7 @@ public void agregarSintoma(String sintoma) {
     public String toString() {
         return "Triaje{" +
                 "fechaHora=" + fechaHora +
-                ", codigo=" + codigo +
+                ", codigoColor=" + codigoColor +
                 ", frecuenciaCardiaca=" + frecuenciaCardiaca +
                 ", temperatura=" + temperatura +
                 ", sintomas=" + sintomas +

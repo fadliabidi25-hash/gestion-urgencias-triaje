@@ -14,9 +14,9 @@ public class Medico extends Persona {
     // Constructores
     public Medico() {}
 
-    public Medico(String nombre, String apellidos, String dni,
+    public Medico(String dni, String nombre, String apellidos,
                   String numColegiado, String especialidad) {
-        super(nombre, apellidos, dni);
+        super(dni, nombre, apellidos);
         this.numColegiado = numColegiado;
         this.especialidad = especialidad;
     }
@@ -27,11 +27,11 @@ public class Medico extends Persona {
      * Atiende al paciente (marcar como atendido, cambiar estado, etc.)
      * En esta implementación solo actualiza el estado a modo de ejemplo.
      */
-    public void atenderPaciente(Paciente p, EstadoPaciente nuevoEstado) {
+    public void atenderPaciente(Paciente p) {
         // Simplemente marcamos que está siendo atendido
-        p.actualizarEstado(nuevoEstado); // podría cambiarse según criterio médico
+        p.actualizarEstado(EstadoPaciente.ESTABLE); // podría cambiarse según criterio médico
        System.out.println("Médico " + nombre + " atendiendo a " + p.getNombre() +
-                           ", estado: " + nuevoEstado);
+                           ", estado: " + p.getEstado());
     }
 
     /**
@@ -43,7 +43,7 @@ public class Medico extends Persona {
         String codigoColor = (p.getTriaje() != null) ? p.getTriaje().getCodigo().toString() : "No asignado";
 // Esa linea de codigo lo q hace es comprobar si el triaje es null, si no esnull saca el color del triaje.
         String informe = "INFORME DE URGENCIAS\n" +
-                         "Paciente: " + p.getNombre() + " " + p.getApellidos() + "\n" +
+                         "Paciente: " + p.getNombre() + "\n" +
                          "Nº Historia: " + p.getNumeroHistoria() + "\n" +
                          "Triaje: " + codigoColor + "\n" +
                          "Diagnóstico: " + (diagnosticoActual != null ? diagnosticoActual : "No especificado") + "\n" +

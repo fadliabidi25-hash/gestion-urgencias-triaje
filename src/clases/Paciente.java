@@ -17,8 +17,8 @@ public class Paciente extends Persona {
     }
 
     // Constructor con datos personales y número de historia
-    public Paciente(String nombre, String apellidos, String dni, String numeroHistoria) {
-        super(nombre, apellidos, dni);
+    public Paciente(String dni, String nombre, String apellidos, String numeroHistoria) {
+        super(dni, nombre, apellidos);
         this.numeroHistoria = numeroHistoria;
         this.estado = EstadoPaciente.ESTABLE;  //el enfermero pone q es estable para q no quede en null, luego si se considera q es otro estado se cambia con actualizarEstado
     }
@@ -30,7 +30,7 @@ public class Paciente extends Persona {
      * (usado por el enfermero durante el triaje)
      */
     public String getHistorial() {
-        return "Paciente: " + nombre + " " + apellidos +
+        return "Paciente: " + nombre +
                "\nNº Historia: " + numeroHistoria +
                "\nAlergias: Ninguna conocida" +
                "\nAntecedentes: No registrados";
