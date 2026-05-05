@@ -1,0 +1,258 @@
+@startuml
+' ============================================================
+' DIAGRAMA DE CLASES - ENUNCIADO 3: GESTIÓN DE URGENCIAS Y TRIAJE
+' ============================================================
+' Nota: HistorialClinico contiene listas de strings para antecedentes.
+' ============================================================
+
+
+' ----- ENUMERADOS -----
+enum CodigoColor {
+    ROJO
+    AMARILLO
+    VERDE
+    BLANCO
+}
+
+
+enum EstadoPaciente {
+    ESTABLE
+    GRAVE
+    PENDIENTE_TRASLADO
+    ALTA
+}
+
+
+' ----- INTERFAZ -----
+interface Notificable {
+    + enviarNotificacion(mensaje: String): void
+}
+
+
+' ----- CLASE ABSTRACTA -----
+abstract class Persona {
+    - dni: String
+    - nombre: String
+    - fechaNacimiento: Date
+    - telefono: String
+    - email: String
+    --
+    + getDni(): String
+    + getNombre(): String
+    + setDatos(datos: Map): void
+}
+
+
+' ----- CLASES QUE HEREDAN DE PERSONA -----
+class Paciente extends Persona {
+    - numeroHistoria: String
+    - fechaIngreso: Date
+    - fechaAlta: Date
+    - estado: EstadoPaciente
+    --
+    + getHistorial(): HistorialClinico
+    + actualizarEstado(estado: EstadoPaciente): void
+    + darAlta(): void
+    + asignarTriaje(triaje: Triaje): void
+}
+
+
+class Medico extends Persona {
+    - especialidad: String
+    - horario: List<String>
+    --
+    + atenderPaciente(paciente: Paciente): void
+    + generarInforme(paciente: Paciente): Informe
+}
+
+
+class Enfermero extends Persona {
+    - unidad: String
+    --
+    + realizarTriaje(paciente: Paciente): Triaje
+    + actualizarRecursos(): void
+}
+
+
+class Administrativo extends Persona {
+    - area: String
+    --
+    + asignarCama(paciente: Paciente): Cama
+    + gestionarTurnos(): void
+}
+
+
+' ----- HISTORIAL CLÍNICO (COMPOSICIÓN CON PACIENTE) -----
+class HistorialClinico {
+    - alergias: List<String>
+    - enfermedadesPrevias: List<String>
+    - medicacionHabitual: List<String>
+    - informes: List<Informe>
+    --
+    + agregarInforme(informe: Informe): void
+    + obtenerUltimoInforme(): Informe
+}
+
+
+' ----- INFORME MÉDICO -----
+class Informe {
+    - fecha: Date
+    - diagnostico: String
+    - tratamiento: String
+    - observaciones: String
+    --
+    + generarTexto(): String
+}
+
+
+' ----- TRIAJE -----
+class Triaje {
+    - fechaHora: Date
+    - codigo: CodigoColor
+    - presionArterial: String
+    - frecuenciaCardiaca: int
+    - temperatura: float
+    - sintomas: List<String>
+    - especialidadRequerida: String
+    --
+    + esCritico(): boolean
+    + calcularTiempoEspera(): int
+    + getCodigo(): CodigoColor
+    + getEspecialidadRequerida(): String
+}
+
+
+' ----- TURNO (PARA CÓDIGO AMARILLO) -----
+class Turno {
+    - numero: int
+    - tiempoEstimado: int
+    - estado: String
+    - paciente: Paciente
+    --
+    + getNumero(): int
+    + setPaciente(paciente: Paciente): void
+    + notificarFamiliares(): void
+    + enviarNotificacion(mensaje: String): void
+}
+
+
+' ----- ALERTA (PARA CÓDIGO ROJO) -----
+class Alerta {
+    - tipo: String
+    - mensaje: String
+    - activada: boolean
+    --
+    + activar(): void
+    + desactivar(): void
+    + enviarNotificacion(mensaje: String): void
+}
+
+
+' ----- RECURSOS (CLASE ABSTRACTA) -----
+abstract class Recurso {
+    - id: String
+    - disponible: boolean
+    - ubicacion: String
+    --
+    + reservar(): boolean
+    + liberar(): void
+    + estaDisponible(): boolean
+}
+
+
+class Cama extends Recurso {
+    - especialidad: String
+    - tipo: String   ' UCI, planta, etc.
+    --
+    + getEspecialidad(): String
+}
+
+
+class EquipoMedico extends Recurso {
+    - nombre: String
+    - estadoOperativo: boolean
+    --
+    + getNombre(): String
+}
+
+
+' ----- TRASLADO -----
+class Traslado {
+    - fechaHora: Date
+    - destino: String
+    - motivo: String
+    - estado: String
+    --
+    + coordinar(): void
+}
+
+
+' ----- SISTEMA CENTRAL DE URGENCIAS -----
+class SistemaUrgencias {
+    - camasDisponibles: List<Cama>
+    - recursosDisponibles: List<EquipoMedico>
+    - turnosPendientes: List<Turno>
+    - alertasActivas: List<Alerta>
+    - pacientesEnEspera: List<Paciente>
+    --
+    + registrarTriaje(paciente: Paciente, triaje: Triaje): void
+    + asignarRecursos(paciente: Paciente): boolean
+    + asignarCama(paciente: Paciente): Cama
+    + liberarCama(cama: Cama): void
+    + actualizarTablero(): void
+    + generarTurno(paciente: Paciente): Turno
+    + activarAlerta(codigo: CodigoColor): void
+    + notificarAdmisiones(paciente: Paciente): void
+    + verificarDisponibilidad(): Map<String, Integer>
+    + enviarNotificacion(mensaje: String): void
+}
+
+
+' ========== RELACIONES ==========
+
+
+' --- Herencia ---
+Paciente --|> Persona
+Medico --|> Persona
+Enfermero --|> Persona
+Administrativo --|> Persona
+
+
+Cama --|> Recurso
+EquipoMedico --|> Recurso
+
+
+' --- Interfaces implementadas ---
+Alerta ..|> Notificable
+Turno ..|> Notificable
+SistemaUrgencias ..|> Notificable
+
+
+' --- Asociaciones y composiciones ---
+Paciente "1" *-- "1" HistorialClinico : tiene >
+HistorialClinico "1" *-- "*" Informe : contiene >
+
+
+Paciente "1" -- "0..1" Triaje : recibe >
+Medico "1" -- "*" Informe : redacta >
+Paciente "1" -- "*" Informe : recibe >
+
+
+Paciente "0..1" -- "1" Cama : ocupa >
+Cama "0..*" -- "1" SistemaUrgencias : gestiona >
+EquipoMedico "0..*" -- "1" SistemaUrgencias : gestiona >
+
+
+Triaje "0..1" -- "0..1" Turno : genera >
+Triaje "0..1" -- "0..1" Alerta : dispara >
+
+
+Paciente "0..1" -- "1" Traslado : realiza >
+
+
+SistemaUrgencias "1" -- "*" Triaje : procesa >
+SistemaUrgencias "1" -- "*" Paciente : registra >
+
+
+@enduml
+
