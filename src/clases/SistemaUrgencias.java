@@ -66,6 +66,7 @@ public class SistemaUrgencias {
     public void realizarTriaje(Paciente p, Enfermero e) {
         if (p != null && e != null) {
             Triaje t = e.realizarTriaje(p);
+            
         }
     }
 
@@ -286,6 +287,10 @@ public class SistemaUrgencias {
             while ((linea = br.readLine()) != null) {
                 String[] d = linea.split(";");
                 if (d.length == 4) {
+                    if (existePacienteConDNI(d[0])) {
+                        System.out.println("Aviso: DNI duplicado en fichero (" + d[0] + "), se ignora.");
+                        continue;
+                    }
                     Paciente p = new Paciente(d[0], d[1], d[2], d[3]);
                     registrarPaciente(p);
                 }

@@ -106,15 +106,31 @@ public class Main {
         String dni = "";
         boolean dniValido = false;
         while (!dniValido) {
-            System.out.print("DNI (formato: 8 números + 1 letra): ");
+            System.out.print("DNI (formato: 8 números + 1 letra, ej: 12345678A): ");
             dni = sc.nextLine().toUpperCase();
             if (dni.length() != 9) {
-                System.out.println("Error: DNI inválido. Debe tener 9 caracteres.");
-            } else if (sistema.existePacienteConDNI(dni)) {
-                System.out.println("Error: Ya existe un paciente registrado con el DNI " + dni + ".");
-            } else {
-                dniValido = true;
+                System.out.println("Error: El DNI debe tener exactamente 9 caracteres.");
+                continue;
             }
+            boolean formatoCorrecto = true;
+            for (int i = 0; i < 8; i++) {
+                if (!Character.isDigit(dni.charAt(i))) {
+                    formatoCorrecto = false;
+                    break;
+                }
+            }
+            if (!Character.isLetter(dni.charAt(8))) {
+                formatoCorrecto = false;
+            }
+            if (!formatoCorrecto) {
+                System.out.println("Error: El DNI debe tener 8 números seguidos de 1 letra (ej: 12345678A).");
+                continue;
+            }
+            if (sistema.existePacienteConDNI(dni)) {
+                System.out.println("Error: Ya existe un paciente registrado con el DNI " + dni + ".");
+                continue;
+            }
+            dniValido = true;
         }
 
         String numHistoria = sistema.generarSiguienteNumeroHistoria();
@@ -203,8 +219,8 @@ public class Main {
         }
         System.out.println("Cama asignada.");
 
-        // Médico (parámetros corregidos: dni, nombre, apellidos, numColegiado, especialidad)
-        Medico m = new Medico("999", "Dr. Sistema", "Hospital", "M-001", "General");
+        // Médico genera informe
+        Medico m = new Medico("Dr. Sistema", "Hospital", "999", "M-001", "General");
         System.out.print("Diagnóstico: ");
         String diagnostico = sc.nextLine();
         System.out.print("Tratamiento: ");
@@ -217,6 +233,7 @@ public class Main {
         // Cambiar estado
         System.out.println("\nActualizar estado (1)GRAVE (2)PENDIENTE_TRASLADO (3)ALTA (0)Mantener: ");
         int estadoOp = leerOpcion();
+        EstadoPaciente estadoAnterior = p.getEstado();
 
         EstadoPaciente nuevoEstado = null;
         switch (estadoOp) {
