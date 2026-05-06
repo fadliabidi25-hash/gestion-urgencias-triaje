@@ -107,15 +107,31 @@ public class Main {
         String dni = "";
         boolean dniValido = false;
         while (!dniValido) {
-            System.out.print("DNI (formato: 8 números + 1 letra): ");
+            System.out.print("DNI (formato: 8 números + 1 letra, ej: 12345678A): ");
             dni = sc.nextLine().toUpperCase();
             if (dni.length() != 9) {
-                System.out.println("Error: DNI inválido. Debe tener 9 caracteres.");
-            } else if (sistema.existePacienteConDNI(dni)) {
-                System.out.println("Error: Ya existe un paciente registrado con el DNI " + dni + ".");
-            } else {
-                dniValido = true;
+                System.out.println("Error: El DNI debe tener exactamente 9 caracteres.");
+                continue;
             }
+            boolean formatoCorrecto = true;
+            for (int i = 0; i < 8; i++) {
+                if (!Character.isDigit(dni.charAt(i))) {
+                    formatoCorrecto = false;
+                    break;
+                }
+            }
+            if (!Character.isLetter(dni.charAt(8))) {
+                formatoCorrecto = false;
+            }
+            if (!formatoCorrecto) {
+                System.out.println("Error: El DNI debe tener 8 números seguidos de 1 letra (ej: 12345678A).");
+                continue;
+            }
+            if (sistema.existePacienteConDNI(dni)) {
+                System.out.println("Error: Ya existe un paciente registrado con el DNI " + dni + ".");
+                continue;
+            }
+            dniValido = true;
         }
 
         String numHistoria = sistema.generarSiguienteNumeroHistoria();
