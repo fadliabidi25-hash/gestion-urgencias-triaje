@@ -1,0 +1,5 @@
+C1;CONSULTA;GENERAL;Planta Baja;true;
+C2;CONSULTA;GENERAL;Planta Baja;true;
+C3;CONSULTA;CARDIOLOGIA;Planta 1;true;
+BOX1;BOX_REANIMACION;UCI;Urgencias;true;
+BOX2;BOX_REANIMACION;UCI;Urgencias;true;

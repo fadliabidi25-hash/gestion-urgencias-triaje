@@ -10,40 +10,33 @@ public class Main {
         sistema = new SistemaUrgencias();
         sc = new Scanner(System.in);
 
-        inicializarCamas();
+        // 1. Cargar datos desde archivos (pacientes y camas)
         cargarDatosIniciales();
 
+        // 2. Si tras cargar no hay camas (primera ejecución), crear las de defecto
+        if (sistema.getCamasDisponibles().isEmpty()) {
+            inicializarCamas();
+        }
+
+        // 3. Menú principal
         boolean activo = true;
         while (activo) {
             mostrarMenuPrincipal();
             int opcion = leerOpcion();
 
             switch (opcion) {
-                case 1:
-                    registrarPaciente();
-                    break;
-                case 2:
-                    realizarTriaje();
-                    break;
-                case 3:
-                    buscarPaciente();
-                    break;
-                case 4:
-                    sistema.listarPacientesEnCola();
-                    break;
-                case 5:
-                    sistema.mostrarEstadoCamas();
-                    break;
-                case 6:
-                    atenderPaciente();
-                    break;
-                case 7:
-                    liberarCama();
-                    break;
+                case 1: registrarPaciente(); break;
+                case 2: realizarTriaje(); break;
+                case 3: buscarPaciente(); break;
+                case 4: sistema.listarPacientesEnCola(); break;
+                case 5: sistema.mostrarEstadoCamas(); break;
+                case 6: atenderPaciente(); break;
+                case 7: liberarCama(); break;
                 case 0:
                     activo = false;
                     System.out.println("\nGuardando datos en fichero...");
                     sistema.guardarPacientes();
+                    sistema.guardarCamas();          // persistencia de camas
                     System.out.println("Cerrando sistema de urgencias...");
                     break;
                 default:
@@ -52,11 +45,26 @@ public class Main {
         }
     }
 
+    // Carga automática al iniciar el programa
     static void cargarDatosIniciales() {
         System.out.println("Sistema iniciado...\n");
         sistema.cargarPacientes();
+        sistema.cargarCamas();
     }
 
+    // Camas por defecto solo si no existía el archivo
+    static void inicializarCamas() {
+        sistema.agregarCama(new Cama("C1", "CONSULTA", "GENERAL", "Planta Baja"));
+        sistema.agregarCama(new Cama("C2", "CONSULTA", "GENERAL", "Planta Baja"));
+        sistema.agregarCama(new Cama("C3", "CONSULTA", "CARDIOLOGIA", "Planta 1"));
+        sistema.agregarCama(new Cama("BOX1", "BOX_REANIMACION", "UCI", "Urgencias"));
+        sistema.agregarCama(new Cama("BOX2", "BOX_REANIMACION", "UCI", "Urgencias"));
+
+        sistema.agregarEquipo(new EquipoMedico("EQ1", "Urgencias", "Desfibrilador"));
+        sistema.agregarEquipo(new EquipoMedico("EQ2", "Urgencias", "Monitor Signos Vitales"));
+    }
+
+    // Menú y lectura de opción (como antes)
     static void mostrarMenuPrincipal() {
         System.out.println("\n========== SISTEMA URGENCIAS Y TRIAJE ==========");
         System.out.println("1. Registrar paciente");
@@ -78,16 +86,7 @@ public class Main {
         }
     }
 
-    static void inicializarCamas() {
-        sistema.agregarCama(new Cama("C1", "CONSULTA", "GENERAL", "Planta Baja"));
-        sistema.agregarCama(new Cama("C2", "CONSULTA", "GENERAL", "Planta Baja"));
-        sistema.agregarCama(new Cama("C3", "CONSULTA", "CARDIOLOGIA", "Planta 1"));
-        sistema.agregarCama(new Cama("BOX1", "BOX_REANIMACION", "UCI", "Urgencias"));
-        sistema.agregarCama(new Cama("BOX2", "BOX_REANIMACION", "UCI", "Urgencias"));
-        
-        sistema.agregarEquipo(new EquipoMedico("EQ1", "Urgencias", "Desfibrilador"));
-        sistema.agregarEquipo(new EquipoMedico("EQ2", "Urgencias", "Monitor Signos Vitales"));
-    }
+    // --- Opciones del menú ---
 
     static void registrarPaciente() {
         System.out.print("\nNombre: ");
@@ -135,13 +134,13 @@ public class Main {
             System.out.println("Paciente no encontrado.");
             return;
         }
-
         if (p.getTriaje() != null) {
             System.out.println("El paciente ya tiene triaje realizado.");
             return;
         }
 
-        Enfermero e = new Enfermero("Enfermero", "Sistema", "000", "E-001");
+        // Enfermero con parámetros corregidos (dni, nombre, apellidos, numColegiado)
+        Enfermero e = new Enfermero("000", "Enfermero", "Sistema", "E-001");
         sistema.realizarTriaje(p, e);
 
         System.out.println("\nTriaje completado:");
@@ -192,22 +191,20 @@ public class Main {
             System.out.println("Paciente no encontrado.");
             return;
         }
-
         if (p.getTriaje() == null) {
             System.out.println("El paciente debe tener triaje realizado primero.");
             return;
         }
 
         // Asignar cama
-        if (sistema.asignarCama(p)) {
-            System.out.println("Cama asignada.");
-        } else {
+        if (!sistema.asignarCama(p)) {
             System.out.println("No se pudo asignar cama.");
             return;
         }
+        System.out.println("Cama asignada.");
 
-        // Médico genera informe
-        Medico m = new Medico("Dr. Sistema", "Hospital", "999", "M-001", "General");
+        // Médico (parámetros corregidos: dni, nombre, apellidos, numColegiado, especialidad)
+        Medico m = new Medico("999", "Dr. Sistema", "Hospital", "M-001", "General");
         System.out.print("Diagnóstico: ");
         String diagnostico = sc.nextLine();
         System.out.print("Tratamiento: ");
@@ -220,26 +217,19 @@ public class Main {
         // Cambiar estado
         System.out.println("\nActualizar estado (1)GRAVE (2)PENDIENTE_TRASLADO (3)ALTA (0)Mantener: ");
         int estadoOp = leerOpcion();
-        EstadoPaciente estadoAnterior = p.getEstado();
 
         EstadoPaciente nuevoEstado = null;
         switch (estadoOp) {
-            case 1:
-                nuevoEstado = EstadoPaciente.GRAVE;
-                break;
-            case 2:
-                nuevoEstado = EstadoPaciente.PENDIENTE_TRASLADO;
-                break;
-            case 3:
-                nuevoEstado = EstadoPaciente.ALTA;
-                break;
+            case 1: nuevoEstado = EstadoPaciente.GRAVE; break;
+            case 2: nuevoEstado = EstadoPaciente.PENDIENTE_TRASLADO; break;
+            case 3: nuevoEstado = EstadoPaciente.ALTA; break;
         }
 
         if (nuevoEstado != null) {
-            m.atenderPaciente(p);
+            // Se actualiza directamente sin usar el método ambiguo de Medico
             p.actualizarEstado(nuevoEstado);
             sistema.enviarNotificacion("Estado de " + p.getNombre() + " actualizado a " + nuevoEstado.toString());
-            
+
             if (nuevoEstado == EstadoPaciente.PENDIENTE_TRASLADO) {
                 Traslado t = new Traslado("Unidad de Cuidados Intensivos (UCI)", "Requiere cuidados de mayor complejidad");
                 t.coordinar();

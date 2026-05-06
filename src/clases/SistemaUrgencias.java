@@ -23,6 +23,9 @@ public class SistemaUrgencias {
         this.recursosDisponibles = new ArrayList<>();
     }
 
+    // ------------------------------------------------------------
+    // Registro y validaciones
+    // ------------------------------------------------------------
     public void registrarPaciente(Paciente p) {
         if (p != null) {
             colaPacientes.add(p);
@@ -50,20 +53,25 @@ public class SistemaUrgencias {
                         max = valor;
                     }
                 } catch (NumberFormatException e) {
-                    // Ignorar si no se puede convertir a número
+                    // Si no se puede convertir, se ignora
                 }
             }
         }
         return String.format("H-%03d", max + 1);
     }
 
+    // ------------------------------------------------------------
+    // Triaje
+    // ------------------------------------------------------------
     public void realizarTriaje(Paciente p, Enfermero e) {
         if (p != null && e != null) {
             Triaje t = e.realizarTriaje(p);
-            
         }
     }
 
+    // ------------------------------------------------------------
+    // Asignación de camas
+    // ------------------------------------------------------------
     public boolean asignarCama(Paciente p) {
         if (p == null) return false;
         if (p.getTriaje() == null) {
@@ -71,13 +79,14 @@ public class SistemaUrgencias {
             return false;
         }
 
-        // Verificar si el paciente ya está en alguna cama
         if (estaPacienteEnCama(p)) {
             System.out.println("El paciente " + p.getNombre() + " ya está en una cama. No se asigna otra.");
             return false;
         }
 
-        final String especialidad = (p.getTriaje().getEspecialidadRequerida() == null || p.getTriaje().getEspecialidadRequerida().isEmpty()) ? "GENERAL" : p.getTriaje().getEspecialidadRequerida();
+        final String especialidad = (p.getTriaje().getEspecialidadRequerida() == null ||
+                                     p.getTriaje().getEspecialidadRequerida().isEmpty()) ?
+                                     "GENERAL" : p.getTriaje().getEspecialidadRequerida();
 
         // 1. Buscar cama de especialidad exacta
         for (Cama c : camasDisponibles) {
@@ -103,6 +112,9 @@ public class SistemaUrgencias {
         return false;
     }
 
+    // ------------------------------------------------------------
+    // Tiempos de espera y alertas
+    // ------------------------------------------------------------
     public int calcularTiempoEspera(Paciente p) {
         if (p == null || p.getTriaje() == null) return 60;
         switch (p.getTriaje().getCodigo()) {
@@ -127,8 +139,6 @@ public class SistemaUrgencias {
             System.out.println("==========================================\n");
 
             asignarBoxReanimacion(p);
-            
-            // Notificar a familia
             enviarNotificacion("Alerta: Paciente crítico " + p.getNombre() + " en URGENCIAS.");
         } else if (p.getTriaje().getCodigo() == CodigoColor.AMARILLO) {
             int espera = calcularTiempoEspera(p);
@@ -140,11 +150,13 @@ public class SistemaUrgencias {
         System.out.println("[Notificación] " + mensaje);
     }
 
-    // Métodos auxiliares
+    // ------------------------------------------------------------
+    // Gestión auxiliar de camas y equipos
+    // ------------------------------------------------------------
     public void agregarCama(Cama c) {
         if (c != null) camasDisponibles.add(c);
     }
-    
+
     public void agregarEquipo(EquipoMedico e) {
         if (e != null) recursosDisponibles.add(e);
     }
@@ -156,23 +168,9 @@ public class SistemaUrgencias {
         return false;
     }
 
-    public List<Paciente> getColaPacientes() { return colaPacientes; }
-    public List<Cama> getCamasDisponibles() { return camasDisponibles; }
-    public List<Turno> getTurnosActivos() { return turnosActivos; }
-
-    // Asigna box de reanimación (privado)
-    private void asignarBoxReanimacion(Paciente p) {
-        for (Cama c : camasDisponibles) {
-            if (c.getTipo().equalsIgnoreCase("BOX_REANIMACION") && c.estaDisponible()) {
-                c.asignarPaciente(p);
-                System.out.println("Paciente " + p.getNombre() + " asignado a BOX REANIMACIÓN " + c.getId());
-                return;
-            }
-        }
-        System.out.println("¡ATENCIÓN! No hay boxes de reanimación libres.");
-    }
-
-    // Buscar paciente por nombre
+    // ------------------------------------------------------------
+    // Búsqueda y listados
+    // ------------------------------------------------------------
     public Paciente buscarPacienteNombre(String nombre) {
         for (Paciente p : colaPacientes) {
             if (p.getNombre().equalsIgnoreCase(nombre)) {
@@ -182,7 +180,6 @@ public class SistemaUrgencias {
         return null;
     }
 
-    // Buscar por número de historia
     public Paciente buscarPacienteHistoria(String numeroHistoria) {
         for (Paciente p : colaPacientes) {
             if (p.getNumeroHistoria().equals(numeroHistoria)) {
@@ -192,7 +189,6 @@ public class SistemaUrgencias {
         return null;
     }
 
-    // Listar pacientes en cola
     public void listarPacientesEnCola() {
         if (colaPacientes.isEmpty()) {
             System.out.println("No hay pacientes en la cola.");
@@ -202,11 +198,13 @@ public class SistemaUrgencias {
         for (int i = 0; i < colaPacientes.size(); i++) {
             Paciente p = colaPacientes.get(i);
             String codigo = (p.getTriaje() != null) ? p.getTriaje().getCodigo().toString() : "Sin triaje";
-            System.out.println((i + 1) + ". " + p.getNombre() + " | Historia: " + p.getNumeroHistoria() + " | Código: " + codigo + " | Estado: " + p.getEstado());
+            System.out.println((i + 1) + ". " + p.getNombre() +
+                    " | Historia: " + p.getNumeroHistoria() +
+                    " | Código: " + codigo +
+                    " | Estado: " + p.getEstado());
         }
     }
 
-    // Mostrar estado de camas
     public void mostrarEstadoCamas() {
         System.out.println("\n--- ESTADO DE CAMAS Y BOXES ---");
         int libres = 0, ocupadas = 0;
@@ -221,14 +219,17 @@ public class SistemaUrgencias {
             }
         }
         System.out.println("Total camas: " + libres + " libres | " + ocupadas + " ocupadas");
-        
+
         System.out.println("\n--- EQUIPOS MÉDICOS ---");
         for (EquipoMedico eq : recursosDisponibles) {
-            System.out.println("  " + eq.getId() + " - " + eq.getNombre() + " (" + eq.getUbicacion() + ") -> " + (eq.estaDisponible() ? "DISPONIBLE" : "EN USO"));
+            System.out.println("  " + eq.getId() + " - " + eq.getNombre() + " (" + eq.getUbicacion() + ") -> " +
+                    (eq.estaDisponible() ? "DISPONIBLE" : "EN USO"));
         }
     }
 
-    // Actualizar estado de paciente
+    // ------------------------------------------------------------
+    // Estado del paciente
+    // ------------------------------------------------------------
     public void actualizarEstadoPaciente(Paciente p, EstadoPaciente nuevoEstado) {
         if (p != null) {
             p.actualizarEstado(nuevoEstado);
@@ -236,26 +237,51 @@ public class SistemaUrgencias {
         }
     }
 
-    // ----- PERSISTENCIA DE DATOS -----
+    // ------------------------------------------------------------
+    // Asignación de box de reanimación (privado)
+    // ------------------------------------------------------------
+    private void asignarBoxReanimacion(Paciente p) {
+        for (Cama c : camasDisponibles) {
+            if (c.getTipo().equalsIgnoreCase("BOX_REANIMACION") && c.estaDisponible()) {
+                c.asignarPaciente(p);
+                System.out.println("Paciente " + p.getNombre() + " asignado a BOX REANIMACIÓN " + c.getId());
+                return;
+            }
+        }
+        System.out.println("¡ATENCIÓN! No hay boxes de reanimación libres.");
+    }
+
+    // ------------------------------------------------------------
+    // Persistencia de pacientes (estilo tradicional)
+    // ------------------------------------------------------------
     public void guardarPacientes() {
+        BufferedWriter bw = null;
         try {
-            BufferedWriter bw = new BufferedWriter(new FileWriter("pacientes.txt"));
+            bw = new BufferedWriter(new FileWriter("pacientes.txt"));
             for (Paciente p : colaPacientes) {
                 bw.write(p.getDni() + ";" + p.getNombre() + ";" + p.getApellidos() + ";" + p.getNumeroHistoria());
                 bw.newLine();
             }
-            bw.close();
             System.out.println("Datos guardados en pacientes.txt");
         } catch (IOException e) {
             System.out.println("Error guardando: " + e.getMessage());
+        } finally {
+            if (bw != null) {
+                try {
+                    bw.close();
+                } catch (IOException e) {
+                    System.out.println("Error al cerrar pacientes.txt");
+                }
+            }
         }
     }
 
     public void cargarPacientes() {
         File f = new File("pacientes.txt");
         if (!f.exists()) return;
+        BufferedReader br = null;
         try {
-            BufferedReader br = new BufferedReader(new FileReader(f));
+            br = new BufferedReader(new FileReader(f));
             String linea;
             while ((linea = br.readLine()) != null) {
                 String[] d = linea.split(";");
@@ -264,9 +290,95 @@ public class SistemaUrgencias {
                     registrarPaciente(p);
                 }
             }
-            br.close();
         } catch (IOException e) {
             System.out.println("Error leyendo: " + e.getMessage());
+        } finally {
+            if (br != null) {
+                try {
+                    br.close();
+                } catch (IOException e) {
+                    System.out.println("Error al cerrar pacientes.txt");
+                }
+            }
         }
     }
+
+    // ------------------------------------------------------------
+    // Persistencia de camas (estilo tradicional, sin try-with-resources)
+    // ------------------------------------------------------------
+    public void guardarCamas() {
+        BufferedWriter bw = null;
+        try {
+            bw = new BufferedWriter(new FileWriter("camas.txt"));
+            for (Cama c : camasDisponibles) {
+                String ocupanteDni = "";
+                if (!c.estaDisponible() && c.getPacienteActual() != null) {
+                    ocupanteDni = c.getPacienteActual().getDni();
+                }
+                bw.write(c.getId() + ";" + c.getTipo() + ";" + c.getEspecialidad() + ";" +
+                         c.getUbicacion() + ";" + c.estaDisponible() + ";" + ocupanteDni);
+                bw.newLine();
+            }
+            System.out.println("Datos de camas guardados en camas.txt");
+        } catch (IOException e) {
+            System.out.println("Error guardando camas: " + e.getMessage());
+        } finally {
+            if (bw != null) {
+                try {
+                    bw.close();
+                } catch (IOException e) {
+                    System.out.println("Error al cerrar camas.txt");
+                }
+            }
+        }
+    }
+
+    public void cargarCamas() {
+        File f = new File("camas.txt");
+        if (!f.exists()) return;
+        BufferedReader br = null;
+        try {
+            br = new BufferedReader(new FileReader(f));
+            String linea;
+            while ((linea = br.readLine()) != null) {
+                String[] d = linea.split(";");
+                if (d.length >= 5) {
+                    Cama c = new Cama(d[0], d[1], d[2], d[3]); // id, tipo, especialidad, ubicacion
+                    boolean disponible = Boolean.parseBoolean(d[4]);
+                    if (!disponible && d.length >= 6 && !d[5].isEmpty()) {
+                        Paciente ocupante = buscarPacientePorDni(d[5]);
+                        if (ocupante != null) {
+                            c.asignarPaciente(ocupante);
+                        }
+                    }
+                    camasDisponibles.add(c);
+                }
+            }
+            System.out.println("Camas cargadas desde camas.txt");
+        } catch (IOException e) {
+            System.out.println("Error cargando camas: " + e.getMessage());
+        } finally {
+            if (br != null) {
+                try {
+                    br.close();
+                } catch (IOException e) {
+                    System.out.println("Error al cerrar camas.txt");
+                }
+            }
+        }
+    }
+
+    public Paciente buscarPacientePorDni(String dni) {
+        for (Paciente p : colaPacientes) {
+            if (p.getDni().equalsIgnoreCase(dni)) return p;
+        }
+        return null;
+    }
+
+    // ------------------------------------------------------------
+    // Getters de listas
+    // ------------------------------------------------------------
+    public List<Paciente> getColaPacientes() { return colaPacientes; }
+    public List<Cama> getCamasDisponibles() { return camasDisponibles; }
+    public List<Turno> getTurnosActivos() { return turnosActivos; }
 }

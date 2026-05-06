@@ -8,3 +8,5 @@
 88888888H;Isabel;Dominguez Castro;H-008
 99999999J;Daniel;Ramos Ortiz;H-009
 00000000K;Sofia;Blanco Rubio;H-010
+12345678K;marcos;fernandez;H-011
+123456789;Hugo;Alvarez;H-012
