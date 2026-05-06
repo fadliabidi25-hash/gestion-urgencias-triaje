@@ -59,8 +59,7 @@ public class SistemaUrgencias {
 
     public void realizarTriaje(Paciente p, Enfermero e) {
         if (p != null && e != null) {
-            Triaje t = e.realizarTriaje(p);
-            
+            e.realizarTriaje(p);
         }
     }
 

@@ -10,31 +10,35 @@ start
 :Sistema genera Numero de Historia;
 
 :Enfermero hace el Triaje;
+:Sistema calcula codigo de color;
 
 if (¿Es urgencia critica?) then (Sí, ROJO)
   :Activar Alerta Sonora y Visual;
-  :Asinar Box de reanimación;
-else (No, otro color)
-  :Añadir a cola de espera;
+  :Asignar Box de reanimacion automaticamente;
+else (AMARILLO/VERDE/BLANCO)
+  :Calcular tiempo de espera;
   :Asignar cama segun especialidad;
 endif
 
-:Medico atiende al pacinte;
-:Generar Informe;
+:Actualizar tablero central de camas;
+:Paciente espera segun prioridad;
 
-if (¿Necesita UCI?) then (Sí)
-  :Poner estado PENDIENTE_TRASLADO;
-  :Cordinar traslado;
+:Medico atiende al pacinte;
+:Medico actualiza estado del paciente;
+
+if (¿Necesita traslado a UCI?) then (Sí)
+  :Verificar camas disponibles en otra area;
+  :Coordinar traslado;
 else (No)
-  if (¿Recuperado?) then (Sí)
-    :Poner estado ALTA;
-  else (No)
-    :Poner estado GRAVE o ESTABLE;
+  if (¿Estado = ALTA?) then (Sí)
+    :Liberar la cama;
+  else (No, GRAVE o ESTABLE)
+    :Permanece en observacion;
   endif
 endif
 
-:Liberar la cama;
-:Actualizar el tablero;
+:Generar informe medico;
+:Integrar informe en historia clinica;
 
 stop
 @enduml

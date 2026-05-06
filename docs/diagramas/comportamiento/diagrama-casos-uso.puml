@@ -1,8 +1,4 @@
 @startuml
-' ============================================================
-' DIAGRAMA DE CASOS DE USO - GESTIÓN DE URGENCIAS Y TRIAJE
-' ============================================================
-
 left to right direction
 skinparam packageStyle rectangle
 

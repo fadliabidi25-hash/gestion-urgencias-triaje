@@ -207,7 +207,7 @@ public class Main {
         }
 
         // Médico genera informe
-        Medico m = new Medico("Dr. Sistema", "Hospital", "999", "M-001", "General");
+        Medico m = new Medico("Dr.Pepito", "Hospital", "999", "M-001", "General");
         System.out.print("Diagnóstico: ");
         String diagnostico = sc.nextLine();
         System.out.print("Tratamiento: ");
@@ -220,8 +220,6 @@ public class Main {
         // Cambiar estado
         System.out.println("\nActualizar estado (1)GRAVE (2)PENDIENTE_TRASLADO (3)ALTA (0)Mantener: ");
         int estadoOp = leerOpcion();
-        EstadoPaciente estadoAnterior = p.getEstado();
-
         EstadoPaciente nuevoEstado = null;
         switch (estadoOp) {
             case 1:
